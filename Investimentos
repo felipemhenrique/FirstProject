@@ -1,0 +1,115 @@
+import requests
+from bs4 import BeautifulSoup
+
+
+def get_selic_rate():
+    # Fazer requisição para a página com a taxa Selic
+    response = requests.get("https://www.bcb.gov.br/api/servico/sitebcb/taxajuros")
+    
+    # Extrair a taxa Selic da resposta usando BeautifulSoup
+    soup = BeautifulSoup(response.text, "html.parser")
+    selic_element = soup.find("valor")
+    if selic_element is not None:
+        selic_rate = float(selic_element.text)
+        print("Taxa Selic encontrada:", selic_rate)
+        return selic_rate
+    else:
+        print("Não foi possível encontrar a taxa Selic na página")
+        return None
+
+def renda_fixa(valor_inicial, taxa_juros, tempo, aporte_mensal, tempo_aporte):
+    montante = valor_inicial
+    for i in range(int(tempo * tempo_aporte)):
+        montante += aporte_mensal
+        juros = montante * (taxa_juros / 100) / tempo_aporte
+        montante += juros
+    return montante
+
+def fundos_investimento(valor_inicial, taxa_juros, tempo, aporte_mensal, tempo_aporte):
+    montante = valor_inicial
+    for i in range(int(tempo * tempo_aporte)):
+        montante += aporte_mensal
+        juros = montante * (taxa_juros / 100) / tempo_aporte
+        montante += juros
+        montante *= 1.02  # Taxa de administração de 2%
+    return montante
+
+def acoes(valor_inicial, taxa_juros, tempo, aporte_mensal, tempo_aporte):
+    montante = valor_inicial
+    for i in range(int(tempo * tempo_aporte)):
+        montante += aporte_mensal
+        juros = montante * (taxa_juros / 100) / tempo_aporte
+        montante += juros
+        montante *= 1 + (0.03 - 0.015) * random.random()  # Variação aleatória de -1,5% a +3%
+    return montante
+    
+   # Loop para perguntar qual tipo de investimento deseja fazer
+while True:
+    opcao = input("Qual tipo de investimento você deseja fazer? (Renda Fixa, Fundos de Investimento, Ações): ").lower()
+    if opcao in ["renda fixa", "fundos de investimento", "ações"]:
+        break
+    print("Opção inválida. Por favor, escolha entre Renda Fixa, Fundos de Investimento e Ações.")
+
+# Perguntar ao usuário qual é o valor investido
+valor = float(input("Qual é o valor investido?"))
+
+# Perguntar ao usuário se haverá aportes mensais ou únicos
+aporte_mensal_ou_unico = input("Haverá aportes mensais ou um único aporte? (Mensal, Único): ").lower()
+
+# Definir o valor do aporte baseado na resposta do usuário
+if aporte_mensal_ou_unico == "mensal":
+    aporte = float(input("Qual é o valor mensal do aporte? "))
+    tempo_aporte = 12  # meses
+elif aporte_mensal_ou_unico == "único":
+    aporte = float(input("Qual é o valor do aporte único? "))
+    tempo_aporte = 1  # ano
+else:
+    print("Opção inválida. Por favor, escolha entre Mensal e Único.")
+    exit()
+
+# Perguntar ao usuário qual é a taxa de juros
+taxa_str = input('Informe a taxa de juros (%): ')
+taxa_str = taxa_str.replace(',', '.')  # substitui ',' por '.'
+taxa = float(taxa_str)
+
+# Obter a taxa Selic atual
+try:
+    taxa_selic = get_selic_rate()
+    print(f'Taxa Selic atual: {taxa_selic:.2f}%')
+except:
+    print("Não foi possível obter a taxa Selic. Por favor, informe a taxa de juros manualmente.")
+
+# Perguntar ao usuário se a taxa de juros é mensal ou anual
+juros_mensal_ou_anual = input("A taxa de juros é mensal ou anual? (Mensal, Anual): ").lower()
+
+# Verificar se a resposta do usuário é válida
+while juros_mensal_ou_anual not in ["mensal", "anual"]:
+    print("Opção inválida. Tente novamente.")
+    juros_mensal_ou_anual = input("A taxa de juros é mensal ou anual? (Mensal, Anual): ").lower()
+
+# Perguntar ao usuário qual é a taxa de juros
+taxa_str = input("Qual é a taxa de juros? (Exemplo: 2.5 para 2.5%): ")
+taxa = float(taxa_str)
+
+# Converter a taxa para mensal ou anual, se necessário
+if juros_mensal_ou_anual == "anual":
+    taxa = (1 + taxa / 100) ** (1/12) - 1
+
+print("Taxa de juros:", taxa)
+
+# Perguntar ao usuário qual é o tempo do investimento
+tempo = float(input("Qual é o tempo do investimento em anos? "))
+
+# Calcular o rendimento do investimento escolhido
+if opcao == "renda fixa":
+    rendimento = renda_fixa(valor, taxa, tempo, aporte, tempo_aporte)
+    print("O rendimento da Renda Fixa após", tempo, "anos será de R$", format(rendimento, ',.2f'))
+elif opcao == "fundos de investimento":
+    rendimento = fundos_investimento(valor, taxa, tempo, aporte, tempo_aporte)
+    print("O rendimento dos Fundos de Investimento após", tempo, "anos será de R$", format(rendimento, ',.2f'))
+elif opcao == "ações":
+    rendimento = acoes(valor, taxa, tempo, aporte, tempo_aporte)
+    print("O rendimento em Ações após", tempo, "anos será de R$", format(rendimento, ',.2f'))
+else:
+    print("Opção inválida. Por favor, escolha entre Renda Fixa, Fundos de Investimento e Ações.")
+print("Lembre-se que os resultados apresentados são baseados em cálculos financeiros e podem sofrer alterações. É importante que você faça sua própria análise e considere outros fatores antes de tomar qualquer decisão de investimento.") 
